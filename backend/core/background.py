@@ -1,0 +1,61 @@
+import asyncio
+import logging
+import shutil
+import time
+from pathlib import Path
+
+logger = logging.getLogger(__name__)
+
+UPLOAD_DIR = Path("/tmp/pixly")
+FILE_MAX_AGE_SECONDS = 2 * 60 * 60  # 2 hours
+
+
+async def cleanup_temp_files():
+    """Delete temp files/dirs older than 2 hours — a safety net for anything
+    left behind by a crashed/killed request (most tools work purely in memory
+    and never touch disk at all; only html-to-image and batch zips do)."""
+    if not UPLOAD_DIR.exists():
+        return
+    now = time.time()
+    deleted = 0
+    for f in UPLOAD_DIR.iterdir():
+        try:
+            age = now - f.stat().st_mtime
+            if age <= FILE_MAX_AGE_SECONDS:
+                continue
+            if f.is_dir():
+                shutil.rmtree(f, ignore_errors=True)
+            else:
+                f.unlink()
+            deleted += 1
+        except Exception as e:
+            logger.warning(f"Could not delete {f}: {e}")
+    if deleted:
+        logger.info(f"🧹 Cleaned up {deleted} stale temp file(s)/dir(s)")
+
+
+async def cleanup_loop():
+    while True:
+        await asyncio.sleep(30 * 60)
+        await cleanup_temp_files()
+
+
+async def keepalive_loop(url: str, interval: int = 10 * 60):
+    """Ping self every 10 minutes to prevent Render cold starts."""
+    import httpx
+    await asyncio.sleep(60)
+    while True:
+        try:
+            async with httpx.AsyncClient() as client:
+                r = await client.get(url, timeout=10)
+                logger.info(f"💓 Keep-alive ping → {r.status_code}")
+        except Exception as e:
+            logger.warning(f"Keep-alive failed: {e}")
+        await asyncio.sleep(interval)
+
+
+def start_background_tasks(app_url: str):
+    loop = asyncio.get_event_loop()
+    loop.create_task(cleanup_loop())
+    if app_url:
+        loop.create_task(keepalive_loop(f"{app_url}/health"))

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pixly – Free Online Image Editor</title>
+    <meta name="description" content="Compress, resize, crop, convert and edit images online — background removal, upscaling, watermarks, memes and more." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      :root {
+        --bg: #f6f3ee;
+        --surface: #ffffff;
+        --surface2: #efece5;
+        --border: #e4e0d8;
+        --border-strong: rgba(21,19,31,0.22);
+        --text-primary: #15131f;
+        --text-secondary: #4a4658;
+        --text-muted: #8a8496;
+        --nav-bg: #ffffff;
+        --nav-border: #e4e0d8;
+        --input-bg: #ffffff;
+        --card-shadow: 0 1px 2px rgba(21,19,31,0.06), 0 8px 24px -12px rgba(21,19,31,0.18);
+        --brand: #5a4bff;
+        --brand-deep: #3f30d9;
+        --amber: #ffb648;
+        --mint: #2fbf93;
+      }
+
+      [data-theme="dark"] {
+        --bg: #121018;
+        --surface: #1c1a26;
+        --surface2: #24212f;
+        --border: #322e3f;
+        --border-strong: #45415a;
+        --text-primary: #efeef5;
+        --text-secondary: #b3aec2;
+        --text-muted: #756f88;
+        --nav-bg: #17151f;
+        --nav-border: #322e3f;
+        --input-bg: #24212f;
+        --card-shadow: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px -12px rgba(0,0,0,0.6);
+        --brand: #8f80ff;
+        --brand-deep: #6a5aff;
+      }
+
+      body {
+        font-family: 'Inter', -apple-system, sans-serif;
+        background: var(--bg);
+        color: var(--text-primary);
+        transition: background .2s, color .2s;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
