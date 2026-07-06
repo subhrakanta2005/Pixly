@@ -318,6 +318,16 @@ export const TOOL_CATEGORIES = [
         ],
       },
       {
+        id: "png-to-svg",
+        label: "PNG to SVG",
+        icon: "◇",
+        desc: "Wrap a PNG/JPG in a scalable SVG container",
+        endpoint: "/png-to-svg",
+        multiFile: false,
+        accepts: "image/*",
+        fields: [],
+      },
+      {
         id: "image-to-pdf",
         label: "Image to PDF",
         icon: "▤",
@@ -380,3 +390,5 @@ export const TOOL_CATEGORIES = [
 ];
 
 export const ALL_TOOLS = TOOL_CATEGORIES.flatMap((c) => c.tools.map((t) => ({ ...t, category: c.id, color: c.color })));
+
+
