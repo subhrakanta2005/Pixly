@@ -1,5 +1,8 @@
 from datetime import date, datetime, timezone
 from fastapi import HTTPException
+import os
+
+ADMIN_EMAILS = {e.strip().lower() for e in os.getenv("ADMIN_EMAILS", "").split(",") if e.strip()}
 
 # Plan definitions — single source of truth
 PLAN_LIMITS = {
