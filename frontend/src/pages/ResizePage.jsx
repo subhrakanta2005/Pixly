@@ -3,7 +3,7 @@ import ThemeToggle from "../components/ThemeToggle";
 import { DoneCard } from "./ToolPage";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
-const MAX_FILE_MB = 10;
+const MAX_FILE_MB = 5;
 
 const SOCIAL_PRESETS = [
   { id: "ig-post", label: "Instagram Post (1080×1080)", w: 1080, h: 1080 },
