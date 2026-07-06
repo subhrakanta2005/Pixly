@@ -41,7 +41,7 @@ PAID_ONLY_TOOLS = {
 FREE_TOOLS = {
     "compress", "resize", "crop", "rotate", "convert-to-jpg", "convert-from-jpg",
     "watermark", "photo-editor", "meme-generator", "info",
-    "collage", "image-to-pdf", "svg-to-raster", "image-converter",
+    "collage", "image-to-pdf", "svg-to-raster", "image-converter", "png-to-svg",
 }
 
 
