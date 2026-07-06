@@ -327,3 +327,4 @@ const styles = {
   input: { width: "100%", padding: "10px 12px", borderRadius: 8, border: "1.5px solid var(--border-strong)", background: "var(--input-bg)", color: "var(--text-primary)", fontSize: 14, outline: "none", boxSizing: "border-box" },
   unit: { position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", fontSize: 12, color: "var(--text-muted)", pointerEvents: "none" },
 };
+

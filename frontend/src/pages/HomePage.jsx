@@ -117,10 +117,105 @@ export default function HomePage({ onSelectTool, onLogin, onRegister, onPricing,
         )}
       </div>
 
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 2rem 3rem" }}>
+        <h2 style={{ fontSize: 22, fontWeight: 700, color: "var(--text-primary)", fontFamily: "'Fraunces', serif", marginBottom: "1.25rem" }}>
+          Work your way
+        </h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
+          <FeatureCard
+            icon="⚡"
+            title="Fast, in the browser"
+            desc="No install, no account required for most tools. Upload a file and get your result in seconds."
+          />
+          <FeatureCard
+            icon="🔒"
+            title="Private by default"
+            desc="Files are processed and then removed — nothing sits around after your job is done."
+          />
+          <FeatureCard
+            icon="📈"
+            title="Built to grow with you"
+            desc="Start free, then unlock higher limits and priority processing as you need more."
+          />
+        </div>
+
+        <div style={{
+          background: "linear-gradient(135deg, #0f1b2d 0%, #1c2f4a 100%)",
+          borderRadius: 16,
+          padding: "2rem 2.25rem",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: "1.5rem",
+          marginBottom: "1.5rem",
+        }}>
+          <div>
+            <div style={{ color: "#ff5a7a", fontSize: 12, fontWeight: 800, letterSpacing: "0.06em", marginBottom: 8 }}>PREMIUM</div>
+            <h3 style={{ color: "#fff", fontSize: 26, fontFamily: "'Fraunces', serif", fontWeight: 700, margin: "0 0 10px" }}>
+              Get more out of Pixly
+            </h3>
+            <p style={{ color: "rgba(255,255,255,0.85)", fontSize: 15, margin: 0, maxWidth: 480 }}>
+              Higher file size limits, no wait between jobs, and priority processing on every tool.
+            </p>
+          </div>
+          <button
+            onClick={onPricing}
+            style={{ padding: "13px 26px", borderRadius: 10, border: "none", background: "#ff3355", color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
+          >
+            See plans
+          </button>
+        </div>
+
+        <a
+          href="https://pdftools-henna.vercel.app"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "1.5rem",
+            flexWrap: "wrap",
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+            borderRadius: 16,
+            padding: "1.75rem 2rem",
+            textDecoration: "none",
+            marginBottom: "2rem",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+            <span style={{ fontSize: 28 }}>📄</span>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 17, color: "var(--text-primary)", marginBottom: 4 }}>Also working with PDFs?</div>
+              <div style={{ fontSize: 14, color: "var(--text-muted)" }}>Try our PDF toolkit — merge, split, compress and convert just as easily.</div>
+            </div>
+          </div>
+          <span style={{ padding: "10px 20px", borderRadius: 8, border: "1.5px solid var(--border-strong)", color: "var(--text-primary)", fontWeight: 600, fontSize: 14, whiteSpace: "nowrap" }}>
+            Explore →
+          </span>
+        </a>
+
+        <p style={{ textAlign: "center", fontSize: 13, color: "var(--text-muted)", margin: 0 }}>
+          🔒 Files are processed securely and removed automatically — your images stay private.
+        </p>
+      </div>
+
       <footer style={{ background: "var(--surface)", borderTop: "1px solid var(--border)", color: "var(--text-muted)", padding: "3rem 2rem", textAlign: "center" }}>
         <div style={{ fontWeight: 700, fontFamily: "'Fraunces', serif", fontSize: 20, color: "var(--text-primary)", marginBottom: 8 }}>Pixly</div>
         <p style={{ margin: 0, fontSize: 14 }}>Free image tools — compress, resize, crop, convert and more.</p>
       </footer>
+    </div>
+  );
+}
+
+function FeatureCard({ icon, title, desc }) {
+  return (
+    <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 14, padding: "1.5rem" }}>
+      <div style={{ fontSize: 24, marginBottom: 12 }}>{icon}</div>
+      <div style={{ fontWeight: 700, fontSize: 15, color: "var(--text-primary)", marginBottom: 8 }}>{title}</div>
+      <div style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.6 }}>{desc}</div>
     </div>
   );
 }
