@@ -28,27 +28,6 @@ from routers import auth as auth_router
 from routers import payments as payments_router
 from routers.auth import limiter
 
-ADMIN_EMAILS = {e.strip().lower() for e in os.getenv("ADMIN_EMAILS", "").split(",") if e.strip()}
-
-
-def get_plan(user) -> str:
-    """Returns the user's *effective* plan — falls back to free if their paid
-    plan has lapsed, even if the `plan` field on the user doc is stale."""
-    if not user:
-        return "free"
-    if user.get("email", "").lower() in ADMIN_EMAILS:
-        return "enterprise"
-    plan = user.get("plan", "free")
-    if plan == "free":
-        return "free"
-    expires = user.get("plan_expires_at")
-    if expires is not None:
-        if expires.tzinfo is None:
-            expires = expires.replace(tzinfo=timezone.utc)
-        if expires < datetime.now(timezone.utc):
-            return "free"
-    return plan
-
 logger = logging.getLogger("pixly")
 
 try:
