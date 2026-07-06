@@ -1,12 +1,16 @@
+import base64
 import io
+import ipaddress
 import logging
 import os
+import socket
 import tempfile
 import uuid
 import zipfile
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import List, Optional, Tuple
+from urllib.parse import urlparse
 
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Depends
 from fastapi.responses import StreamingResponse
@@ -481,24 +485,99 @@ def _svg_to_raster_sync(data: bytes, out_format: str, width: Optional[int], heig
     return cairosvg.svg2png(bytestring=data, **kwargs)
 
 
+class UnsafeURLError(Exception):
+    pass
+
+
+def _assert_safe_url(url: str) -> None:
+    """Blocks SSRF: rejects non-http(s) schemes and any hostname that
+    resolves to a private, loopback, link-local, or reserved address
+    (localhost, internal Render services, cloud metadata endpoints, etc.)."""
+    parsed = urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise UnsafeURLError("Only http/https URLs are allowed.")
+    if not parsed.hostname:
+        raise UnsafeURLError("URL has no hostname.")
+
+    try:
+        addrs = socket.getaddrinfo(parsed.hostname, None)
+    except socket.gaierror:
+        raise UnsafeURLError("Could not resolve hostname.")
+
+    for family, _, _, _, sockaddr in addrs:
+        ip = ipaddress.ip_address(sockaddr[0])
+        if (
+            ip.is_private
+            or ip.is_loopback
+            or ip.is_link_local
+            or ip.is_reserved
+            or ip.is_multicast
+            or ip.is_unspecified
+        ):
+            raise UnsafeURLError("URL resolves to a blocked internal address.")
+
+
 def _html_to_image_sync(html: str, url: str, width: int, height: int, out_format: str) -> bytes:
     """Renders HTML (or a URL) with a headless Chromium via Playwright.
     Requires `playwright install chromium --with-deps` at deploy time — see
     README system dependencies."""
     from playwright.sync_api import sync_playwright
+
+    if url:
+        _assert_safe_url(url)  # raises UnsafeURLError before we ever launch a browser
+
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page(viewport={"width": width, "height": height})
-        if url:
-            page.goto(url, wait_until="networkidle", timeout=20000)
-        else:
-            page.set_content(html, wait_until="networkidle")
-        screenshot = page.screenshot(
-            type="jpeg" if out_format == "jpg" else "png",
-            full_page=True,
-        )
-        browser.close()
+
+        # Defense-in-depth: also block at the network layer, since a page
+        # can redirect or load sub-resources pointing at an internal address
+        # even after the initial URL passed the DNS check above.
+        def _guard_route(route):
+            try:
+                _assert_safe_url(route.request.url)
+                route.continue_()
+            except UnsafeURLError:
+                route.abort()
+
+        page.route("**/*", _guard_route)
+
+        try:
+            if url:
+                page.goto(url, wait_until="networkidle", timeout=20000)
+            else:
+                page.set_content(html, wait_until="networkidle")
+            screenshot = page.screenshot(
+                type="jpeg" if out_format == "jpg" else "png",
+                full_page=True,
+            )
+        finally:
+            browser.close()
     return screenshot
+
+
+def _png_to_svg_sync(data: bytes) -> bytes:
+    """Wraps a raster image in a valid SVG container (base64-embedded <image>).
+
+    Honesty note: this is NOT vector tracing — the pixels aren't converted to
+    paths/shapes. True bitmap-to-vector tracing needs potrace or vtracer,
+    which we deliberately don't depend on (see README). This produces a
+    valid, scalable SVG file that embeds the original raster — the same
+    technique most free "PNG to SVG" tools use for photos, since true
+    tracing only looks good on simple logos/line art anyway.
+    """
+    img = _open_image(data)
+    w, h = img.size
+    buf = io.BytesIO()
+    img.convert("RGBA").save(buf, format="PNG")
+    b64 = base64.b64encode(buf.getvalue()).decode("ascii")
+    svg = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" '
+        f'viewBox="0 0 {w} {h}">'
+        f'<image width="{w}" height="{h}" '
+        f'href="data:image/png;base64,{b64}"/></svg>'
+    )
+    return svg.encode("utf-8")
 
 
 # ─── ENDPOINTS ────────────────────────────────────────────────────────────────
@@ -761,6 +840,14 @@ async def svg_to_raster(
     return image_response(result, media, name)
 
 
+@app.post("/png-to-svg")
+async def png_to_svg(file: UploadFile = File(...), user=Depends(get_optional_user)):
+    data = await intake_bytes(file, user, "png-to-svg")
+    result = await run_in_threadpool(_png_to_svg_sync, data)
+    name = f"{sanitize_filename(file.filename).rsplit('.', 1)[0]}.svg"
+    return image_response(result, "image/svg+xml", name)
+
+
 @app.post("/image-converter")
 async def image_converter(
     files: List[UploadFile] = File(...),
@@ -800,7 +887,10 @@ async def html_to_image(
     db_ref = get_db()
     if db_ref is not None:
         await check_and_increment_ops(user, db_ref, "html-to-image")
-    result = await run_in_threadpool(_html_to_image_sync, html, url, width, height, out_format)
+    try:
+        result = await run_in_threadpool(_html_to_image_sync, html, url, width, height, out_format)
+    except UnsafeURLError as e:
+        raise HTTPException(400, str(e))
     media = "image/jpeg" if out_format == "jpg" else "image/png"
     return image_response(result, media, f"webpage.{out_format}")
 
@@ -816,3 +906,4 @@ async def image_info(file: UploadFile = File(...), user=Depends(get_optional_use
         "mode": img.mode,
         "size_bytes": len(data),
     }
+
